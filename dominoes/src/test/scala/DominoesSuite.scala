@@ -7,7 +7,6 @@ class DominoesSuite extends FunSuite with Matchers {
   }
 
   test("singleton input = singleton output") {
-    pending
     check(List((1, 1)), true)
   }
 
@@ -78,14 +77,14 @@ class DominoesSuite extends FunSuite with Matchers {
           assert(x == y, s"dominoes $i1 and $i2 don't match: $a $b")
         case _ =>
       }
-    def endsShouldMatch: Unit =
-      if (!result.isEmpty)
+    def endsShouldMatch(): Unit =
+      if (result.nonEmpty)
         consecutivesShouldMatch(List((result.last, result.length - 1),
                                      (result.head, 0)))
 
     assert(result.map(sortDomino).sorted == input.map(sortDomino).sorted,
         "doesn't consist of input dominoes")
     consecutivesShouldMatch(result.zipWithIndex)
-    endsShouldMatch
+    endsShouldMatch()
   }
 }

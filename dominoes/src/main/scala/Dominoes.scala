@@ -1,4 +1,3 @@
 object Dominoes {
-
-  def chain(dominoes: List[(Int, Int)]): Option[List[(Int, Int)]] = Some(Nil)
+  def chain(dominoes: List[(Int, Int)]): Option[List[(Int, Int)]] = Some(dominoes)
 }
