@@ -15,7 +15,6 @@ class DominoesSuite extends FunSuite with Matchers {
   }
 
   test("three elements") {
-    pending
     check(List((1, 2), (3, 1), (2, 3)), true)
   }
 
