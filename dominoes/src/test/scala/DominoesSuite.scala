@@ -19,7 +19,6 @@ class DominoesSuite extends FunSuite with Matchers {
   }
 
   test("can reverse dominoes") {
-    pending
     check(List((1, 2), (1, 3), (2, 3)), true)
   }
 
