@@ -23,7 +23,6 @@ class DominoesSuite extends FunSuite with Matchers {
   }
 
   test("can't be chained") {
-    pending
     check(List((1, 2), (4, 1), (2, 3)), false)
   }
 

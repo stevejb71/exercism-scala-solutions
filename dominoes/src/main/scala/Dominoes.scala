@@ -76,8 +76,18 @@ object Dominoes {
       if(chain.length == 1 && !Dominoe(chain.head).isSymmetric) {
         None
       } else {
-        Some(chain)
+        if(isChain(chain)) {
+          Some(chain)
+        } else {
+          None
+        }
       }
     }
+  }
+
+  private def isChain(ds: List[(Int, Int)]): Boolean = {
+    val d1 = ds.head._1
+    val d2 = ds.last._2
+    d1 == d2
   }
 }
