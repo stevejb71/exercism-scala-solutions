@@ -2,8 +2,6 @@ import scala.annotation.tailrec
 
 case class Dominoe(d: (Int, Int)) extends AnyVal {
   def isSymmetric: Boolean = d._1 == d._2
-  def _1 = d._1
-  def _2 = d._2
   def swap = Dominoe(d.swap)
 }
 
@@ -12,14 +10,17 @@ case class Graph() {
   private var size = 0
 
   def set(x1: Int, x2: Int): Unit = {
+    def set1(x1: Int, x2: Int): Unit = matrix(x1)(x2) += 1
     set1(x1, x2)
     set1(x2, x1)
     size += 1
   }
   def isEmpty: Boolean = size == 0
   def unset(x1: Int, x2: Int): Unit = {
+    def unset1(x1: Int, x2: Int): Unit = matrix(x1)(x2) -= 1
     unset1(x1, x2)
     unset1(x2, x1)
+    size -= 1
   }
   def pickMatching(n: Int): Option[Dominoe] = {
     val nthRow = matrix(n)
@@ -31,8 +32,6 @@ case class Graph() {
       None
     }
   }
-  private def set1(x1: Int, x2: Int): Unit = matrix(x1)(x2) += 1
-  private def unset1(x1: Int, x2: Int): Unit = matrix(x1)(x2) -= 1
 }
 
 object Graph {
@@ -40,16 +39,6 @@ object Graph {
     val g = Graph()
     xs.foreach {case (x1, x2) => g.set(x1, x2)}
     g
-  }
-  def hibit(value: Byte): Byte = {
-    @tailrec def go(result: Int)(mask: Int): Byte = {
-      if((value & mask) != 0) {
-        result.toByte
-      } else {
-        go(result - 1)(mask >> 1)
-      }
-    }
-    go(6)(64)
   }
 }
 
@@ -78,22 +67,14 @@ object Dominoes {
       Some(Nil)
     } else {
       val chain = findChain(Graph.ofList(dominoes.tail), List(dominoes.head))
-      if(chain.length == 1 && !Dominoe(chain.head).isSymmetric) {
-        None
-      } else {
-        if (isValidChain(chain))
-          if (chain.length == dominoes.length) {
-            Some(chain)
-          } else {
-            None
-          }
-        else {
-          if (chain.length == dominoes.length) {
-            None
-          } else {
-            None
-          }
+      if (chain.length == dominoes.length) {
+        if (isValidChain(chain)) {
+          Some(chain)
+        } else {
+          None
         }
+      } else {
+        None
       }
     }
   }
