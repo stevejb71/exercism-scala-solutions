@@ -76,7 +76,7 @@ object Dominoes {
       if(chain.length == 1 && !Dominoe(chain.head).isSymmetric) {
         None
       } else {
-        if(isChain(chain)) {
+        if(isChain(chain) && chain.length == dominoes.length) {
           Some(chain)
         } else {
           None

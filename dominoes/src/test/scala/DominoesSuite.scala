@@ -27,7 +27,6 @@ class DominoesSuite extends FunSuite with Matchers {
   }
 
   test("disconnected - simple") {
-    pending
     check(List((1, 1), (2, 2)), false)
   }
 
