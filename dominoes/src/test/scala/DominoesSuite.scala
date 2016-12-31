@@ -11,7 +11,6 @@ class DominoesSuite extends FunSuite with Matchers {
   }
 
   test("singleton that can't be chained") {
-    pending
     check(List((1, 2)), false)
   }
 
