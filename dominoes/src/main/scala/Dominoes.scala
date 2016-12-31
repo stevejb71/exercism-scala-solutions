@@ -7,35 +7,40 @@ case class Dominoe(d: (Int, Int)) extends AnyVal {
   def swap = Dominoe(d.swap)
 }
 
-case class Graph(private val matrix: Long) extends AnyVal {
-  def set(x1: Int, x2: Int): Graph = set1(x1, x2).set1(x2, x1)
-  def isEmpty: Boolean = matrix == 0
-  def unset(x1: Int, x2: Int): Graph = unset1(x1, x2).unset1(x2, x1)
-  def pickAny: Option[(Graph, Dominoe)] = {
-    for {
-      pickedRowIndex <- (0 until 8).find(r => row(r) != 0)
-      pickedRow = row(pickedRowIndex)
-      pickedColIndex = Graph.hibit(pickedRow)
-      graph = unset(pickedRowIndex, pickedColIndex)
-    } yield (graph, Dominoe((pickedRowIndex, pickedColIndex)))
+case class Graph() {
+  private val matrix: Array[Array[Int]] = Array.fill(6, 6)(0)
+  private var size = 0
+
+  def set(x1: Int, x2: Int): Unit = {
+    set1(x1, x2)
+    set1(x2, x1)
+    size += 1
   }
-  def pickMatching(n: Int): Option[(Graph, Dominoe)] = {
-    val nthRow = row(n)
-    if(nthRow != 0) {
-      val colIndex = Graph.hibit(nthRow)
-      val g = unset(n, colIndex)
-      Some((g, Dominoe(n, colIndex)))
+  def isEmpty: Boolean = size == 0
+  def unset(x1: Int, x2: Int): Unit = {
+    unset1(x1, x2)
+    unset1(x2, x1)
+  }
+  def pickMatching(n: Int): Option[Dominoe] = {
+    val nthRow = matrix(n)
+    val colIndex = nthRow.indexWhere(_ != 0)
+    if(colIndex != -1) {
+      unset(n, colIndex)
+      Some(Dominoe(n, colIndex))
     } else {
       None
     }
   }
-  private def set1(x1: Int, x2: Int): Graph = Graph(matrix | 1L << (x1 * 8 + x2))
-  private def unset1(x1: Int, x2: Int): Graph = Graph(matrix & ~(1L << (x1 * 8 + x2)))
-  private def row(x1: Int): Byte = ((matrix & (0xFF << 8 * x1)) >> 8 * x1).toByte
+  private def set1(x1: Int, x2: Int): Unit = matrix(x1)(x2) += 1
+  private def unset1(x1: Int, x2: Int): Unit = matrix(x1)(x2) -= 1
 }
 
 object Graph {
-  def ofList(xs: List[(Int, Int)]): Graph = xs.foldLeft(Graph(0)){case (g, (x, y)) => g.set(x,y)}
+  def ofList(xs: List[(Int, Int)]): Graph = {
+    val g = Graph()
+    xs.foreach {case (x1, x2) => g.set(x1, x2)}
+    g
+  }
   def hibit(value: Byte): Byte = {
     @tailrec def go(result: Int)(mask: Int): Byte = {
       if((value & mask) != 0) {
@@ -51,7 +56,7 @@ object Graph {
 object Dominoes {
   // Use Vector for snocs
   def chain(dominoes: List[(Int, Int)]): Option[List[(Int, Int)]] = {
-    def findChain(g: Graph, chain: List[(Int, Int)]): List[(Int, Int)] = {
+    @tailrec def findChain(g: Graph, chain: List[(Int, Int)]): List[(Int, Int)] = {
       val first = chain.head._1
       val firstMatch = g.pickMatching(first)
       if(firstMatch.isEmpty) {
@@ -60,13 +65,13 @@ object Dominoes {
         if(lastMatch.isEmpty) {
           chain
         } else {
-          val (g1, d1) = lastMatch.get
-          findChain(g1, chain :+ d1.d)
+          val d1 = lastMatch.get
+          findChain(g, chain :+ d1.d)
         }
       } else {
-        val (g1, d1) = firstMatch.get
+        val d1 = firstMatch.get
         val d = d1.swap
-        findChain(g1, d.d :: chain)
+        findChain(g, d.d :: chain)
       }
     }
     if(dominoes.isEmpty) {
@@ -76,16 +81,24 @@ object Dominoes {
       if(chain.length == 1 && !Dominoe(chain.head).isSymmetric) {
         None
       } else {
-        if(isChain(chain) && chain.length == dominoes.length) {
-          Some(chain)
-        } else {
-          None
+        if (isValidChain(chain))
+          if (chain.length == dominoes.length) {
+            Some(chain)
+          } else {
+            None
+          }
+        else {
+          if (chain.length == dominoes.length) {
+            None
+          } else {
+            None
+          }
         }
       }
     }
   }
 
-  private def isChain(ds: List[(Int, Int)]): Boolean = {
+  private def isValidChain(ds: List[(Int, Int)]): Boolean = {
     val d1 = ds.head._1
     val d2 = ds.last._2
     d1 == d2
