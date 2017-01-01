@@ -5,10 +5,13 @@ case class Dominoe(d: (Int, Int)) extends AnyVal {
   def swap = Dominoe(d.swap)
 }
 
-case class Graph() {
-  private val matrix: Array[Array[Int]] = Array.fill(6, 6)(0)
+case class Graph(private val matrix: Array[Array[Int]] = Array.fill(6, 6)(0)) {
   private var size = 0
-
+  def copy: Graph = {
+    val c = Graph(matrix.clone().map(_.clone()))
+    c.size = this.size
+    c
+  }
   def set(x1: Int, x2: Int): Unit = {
     def set1(x1: Int, x2: Int): Unit = matrix(x1)(x2) += 1
     set1(x1, x2)
@@ -66,7 +69,8 @@ object Dominoes {
     if(dominoes.isEmpty) {
       Some(Nil)
     } else {
-      val chain = findChain(Graph.ofList(dominoes.tail), List(dominoes.head))
+      val g = Graph.ofList(dominoes.tail)
+      val chain = findChain(g, List(dominoes.head))
       if (chain.length == dominoes.length) {
         if (isValidChain(chain)) {
           Some(chain)
@@ -74,7 +78,21 @@ object Dominoes {
           None
         }
       } else {
-        None
+        var i = -1
+        var chainFound: Seq[(Int, Int)] = Seq()
+        while(i < chain.length - 1 && chainFound.size <= 1) {
+          i += 1
+          val insertAt = chain(i)
+          val g1 = g.copy
+          chainFound = findChain(g1, List(insertAt))
+        }
+        if(chainFound.size > 1) {
+          val (before, after) = chain.splitAt(i + 1)
+          val extended = before ++ chainFound.tail ++ after
+          Some(extended)
+        } else {
+          None
+        }
       }
     }
   }
