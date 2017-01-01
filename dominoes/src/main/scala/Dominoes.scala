@@ -1,65 +1,39 @@
 import scala.annotation.tailrec
 
-case class AdjacencyMatrix(private val matrix: Array[Array[Int]] = Array.fill(7, 7)(0)) {
-  private var size = 0
-  def copy: AdjacencyMatrix = {
-    val c = AdjacencyMatrix(matrix.clone().map(_.clone()))
-    c.size = this.size
-    c
-  }
-  def set(x1: Int, x2: Int): Unit = {
-    def set1(x1: Int, x2: Int): Unit = matrix(x1)(x2) += 1
-    set1(x1, x2)
-    set1(x2, x1)
-    size += 1
-  }
-  def unset(x1: Int, x2: Int): Unit = {
-    def unset1(x1: Int, x2: Int): Unit = matrix(x1)(x2) -= 1
-    unset1(x1, x2)
-    unset1(x2, x1)
-    size -= 1
-  }
-  def pickMatching(n: Int): Option[(Int, Int)] = {
-    val nthRow = matrix(n)
-    val colIndex = nthRow.indexWhere(_ != 0)
+case class AdjacencyMatrix(private val matrix: Vector[Int] = Vector.fill(7 * 7)(0)) extends AnyVal {
+  def set(x1: Int, x2: Int): AdjacencyMatrix = modify(x1, x2, 1).modify(x2, x1, 1)
+  def unset(x1: Int, x2: Int): AdjacencyMatrix = modify(x1, x2, -1).modify(x2, x1, -1)
+  def pickMatching(n: Int): Option[(AdjacencyMatrix, (Int, Int))] = {
+    val colIndex = matrix.slice(n * 7, n * 7 + 7).indexWhere(_ != 0)
     if(colIndex != -1) {
-      unset(n, colIndex)
-      Some((n, colIndex))
+      Some((unset(n, colIndex), (n, colIndex)))
     } else {
       None
     }
   }
-}
-
-object AdjacencyMatrix {
-  def ofList(xs: List[(Int, Int)]): AdjacencyMatrix = {
-    val g = AdjacencyMatrix()
-    xs.foreach {case (x1, x2) => g.set(x1, x2)}
-    g
+  private def modify(x1: Int, x2: Int, inc: Int): AdjacencyMatrix = {
+    val i = x1 * 7 + x2
+    AdjacencyMatrix(matrix.updated(i, matrix(i) + inc))
   }
 }
 
+object AdjacencyMatrix {
+  def ofList(xs: List[(Int, Int)]): AdjacencyMatrix = xs.foldLeft(AdjacencyMatrix()){case (am, (x1, x2)) => am.set(x1, x2)}
+}
+
 object Dominoes {
-  // Use Vector for snocs
   def chain(dominoes: List[(Int, Int)]): Option[List[(Int, Int)]] = {
-    @tailrec def findChain(g: AdjacencyMatrix, chain: List[(Int, Int)]): List[(Int, Int)] = {
-      val firstMatch = g.pickMatching(chain.head._1)
-      if(firstMatch.isEmpty) {
-        val lastMatch = g.pickMatching(chain.last._2)
-        if(lastMatch.isEmpty) {
-          chain
-        } else {
-          findChain(g, chain :+ lastMatch.get)
-        }
-      } else {
-        findChain(g, firstMatch.get.swap :: chain)
+    @tailrec def findChain(g: AdjacencyMatrix, chain: List[(Int, Int)]): (AdjacencyMatrix, List[(Int, Int)]) = {
+      (g.pickMatching(chain.head._1), g.pickMatching(chain.last._2)) match {
+        case (Some((g1, first)), _) => findChain(g1, first.swap :: chain)
+        case (_, Some((g1, last))) => findChain(g1, chain :+ last)
+        case _ => (g, chain)
       }
     }
     if(dominoes.isEmpty) {
       Some(Nil)
     } else {
-      val g = AdjacencyMatrix.ofList(dominoes.tail)
-      val chain = findChain(g, List(dominoes.head))
+      val (g, chain) = findChain(AdjacencyMatrix.ofList(dominoes.tail), List(dominoes.head))
       var keepGoing = true
       var extended = chain
       var currGraph = g
@@ -69,10 +43,12 @@ object Dominoes {
         while (i < extended.length - 1 && chainFound.size <= 1) {
           i += 1
           val insertAt = extended(i)
-          val g1 = currGraph.copy
-          chainFound = findChain(g1, List(insertAt))
-          if (chainFound.size > 1) {
-            currGraph = g1
+          val prev = currGraph
+          val x = findChain(currGraph, List(insertAt))
+          currGraph = x._1
+          chainFound = x._2
+          if (chainFound.size <= 1) {
+            currGraph = prev
           }
         }
         if (chainFound.size > 1) {
@@ -83,17 +59,11 @@ object Dominoes {
           keepGoing = false
         }
       }
-      if(extended.length == dominoes.length && isValidChain(extended)) {
+      if(extended.length == dominoes.length && extended.head._1 == extended.last._2) {
         Some(extended)
       } else {
         None
       }
     }
-  }
-
-  private def isValidChain(ds: List[(Int, Int)]): Boolean = {
-    val d1 = ds.head._1
-    val d2 = ds.last._2
-    d1 == d2
   }
 }
