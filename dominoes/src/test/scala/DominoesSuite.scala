@@ -47,7 +47,6 @@ class DominoesSuite extends FunSuite with Matchers {
   }
 
   test("ten elements") {
-    pending
     check(List((1, 2), (5, 3), (3, 1), (1, 2), (2, 4), (1, 6), (2, 3), (3, 4), (5, 6)), true)
   }
 

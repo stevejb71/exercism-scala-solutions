@@ -5,7 +5,7 @@ case class Dominoe(d: (Int, Int)) extends AnyVal {
   def swap = Dominoe(d.swap)
 }
 
-case class Graph(private val matrix: Array[Array[Int]] = Array.fill(6, 6)(0)) {
+case class Graph(private val matrix: Array[Array[Int]] = Array.fill(7, 7)(0)) {
   private var size = 0
   def copy: Graph = {
     val c = Graph(matrix.clone().map(_.clone()))
