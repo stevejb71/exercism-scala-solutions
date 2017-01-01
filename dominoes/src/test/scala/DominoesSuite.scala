@@ -1,5 +1,7 @@
 import org.scalatest.{FunSuite, Matchers}
 
+import scala.util.Random
+
 class DominoesSuite extends FunSuite with Matchers {
 
   test("empty input = empty output") {
@@ -46,6 +48,10 @@ class DominoesSuite extends FunSuite with Matchers {
     check(List((1, 2), (2, 3), (3, 1), (1, 1), (2, 2), (3, 3)), true)
   }
 
+  test("separate loops 2") {
+    check(List((3, 1), (2, 2), (1, 2), (1, 1), (3, 3), (2, 3)), true)
+  }
+
   test("ten elements") {
     check(List((1, 2), (5, 3), (3, 1), (1, 2), (2, 4), (1, 6), (2, 3), (3, 4), (5, 6)), true)
   }
@@ -61,19 +67,21 @@ class DominoesSuite extends FunSuite with Matchers {
   private def checkChain(result: List[(Int, Int)], input: List[(Int, Int)]): Unit = {
     def sortDomino(ab: (Int, Int)): (Int, Int) =
       if (ab._1 > ab._2) ab.swap else ab
+
     def consecutivesShouldMatch(dominoes: List[((Int, Int), Int)]): Unit =
       dominoes.tails foreach {
-        case (a@(_,x), i1)::(b@(y,_), i2)::_ =>
+        case (a@(_, x), i1) :: (b@(y, _), i2) :: _ =>
           assert(x == y, s"dominoes $i1 and $i2 don't match: $a $b")
         case _ =>
       }
+
     def endsShouldMatch(): Unit =
       if (result.nonEmpty)
         consecutivesShouldMatch(List((result.last, result.length - 1),
-                                     (result.head, 0)))
+          (result.head, 0)))
 
     assert(result.map(sortDomino).sorted == input.map(sortDomino).sorted,
-        "doesn't consist of input dominoes")
+      "doesn't consist of input dominoes")
     consecutivesShouldMatch(result.zipWithIndex)
     endsShouldMatch()
   }
