@@ -37,22 +37,30 @@ object Dominoes {
       var keepGoing = true
       var extended = chain
       var currGraph = g
+      var i = 0
+      var chainFound = Seq[(Int, Int)]()
       while(keepGoing) {
-        var i = -1
-        var chainFound: Seq[(Int, Int)] = Seq()
-        while (i < extended.length - 1 && chainFound.size <= 1) {
-          i += 1
-          val insertAt = extended(i)
-          val prev = currGraph
-          val x = findChain(currGraph, List(insertAt))
-          currGraph = x._1
-          chainFound = x._2
-          if (chainFound.size <= 1) {
-            currGraph = prev
+        def inner(i: Int, chainFound: Seq[(Int, Int)], currGraph: AdjacencyMatrix): (Int, Seq[(Int, Int)], AdjacencyMatrix) =  {
+          if(i < extended.length && chainFound.size <= 1) {
+            val insertAt = extended(i)
+            val prev = currGraph
+            val x = findChain(currGraph, List(insertAt))
+            var currGraph2 = x._1
+            val chainFound2 = x._2
+            if (chainFound2.size <= 1) {
+              currGraph2 = prev
+            }
+            inner(i + 1, chainFound2, currGraph2)
+          } else {
+            (i, chainFound, currGraph)
           }
         }
+        val innerResult = inner(i, Seq(), currGraph)
+        i = innerResult._1
+        chainFound = innerResult._2
+        currGraph = innerResult._3
         if (chainFound.size > 1) {
-          val (before, after) = extended.splitAt(i + 1)
+          val (before, after) = extended.splitAt(i)
           extended = before ++ chainFound.tail ++ after
           keepGoing = extended.length < dominoes.length
         } else {
