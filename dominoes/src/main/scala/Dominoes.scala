@@ -40,22 +40,15 @@ object Dominoes {
       var i = 0
       var chainFound = Seq[(Int, Int)]()
       while(keepGoing) {
-        def inner(i: Int, chainFound: Seq[(Int, Int)], currGraph: AdjacencyMatrix): (Int, Seq[(Int, Int)], AdjacencyMatrix) =  {
+        @tailrec def findInsertionPoint(i: Int, chainFound: Seq[(Int, Int)], currGraph: AdjacencyMatrix): (Int, Seq[(Int, Int)], AdjacencyMatrix) =  {
           if(i < extended.length && chainFound.size <= 1) {
-            val insertAt = extended(i)
-            val prev = currGraph
-            val x = findChain(currGraph, List(insertAt))
-            var currGraph2 = x._1
-            val chainFound2 = x._2
-            if (chainFound2.size <= 1) {
-              currGraph2 = prev
-            }
-            inner(i + 1, chainFound2, currGraph2)
+            val (nextGraph, nextChain) = findChain(currGraph, List(extended(i)))
+            findInsertionPoint(i + 1, nextChain, if (nextChain.size <= 1) currGraph else nextGraph)
           } else {
             (i, chainFound, currGraph)
           }
         }
-        val innerResult = inner(i, Seq(), currGraph)
+        val innerResult = findInsertionPoint(i, Seq(), currGraph)
         i = innerResult._1
         chainFound = innerResult._2
         currGraph = innerResult._3
