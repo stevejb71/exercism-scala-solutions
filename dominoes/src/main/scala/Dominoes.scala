@@ -34,9 +34,7 @@ object Dominoes {
       Some(Nil)
     } else {
       val (g, chain) = findChain(AdjacencyMatrix.ofList(dominoes.tail), List(dominoes.head))
-      var currGraph = g
       var i = 0
-      var chainFound = Seq[(Int, Int)]()
       @tailrec def findInsertionPoint(i: Int, extended: List[(Int, Int)], chainFound: Seq[(Int, Int)], currGraph: AdjacencyMatrix): (Int, Seq[(Int, Int)], AdjacencyMatrix) =  {
         if(i < extended.length && chainFound.size <= 1) {
           val (nextGraph, nextChain) = findChain(currGraph, List(extended(i)))
@@ -45,27 +43,19 @@ object Dominoes {
           (i, chainFound, currGraph)
         }
       }
-      @tailrec def outer(extended: List[(Int, Int)]): List[(Int, Int)] = {
+      @tailrec def extendChain(extended: List[(Int, Int)], currGraph: AdjacencyMatrix): List[(Int, Int)] = {
         val innerResult = findInsertionPoint(i, extended, Seq(), currGraph)
         i = innerResult._1
-        chainFound = innerResult._2
-        currGraph = innerResult._3
-        var extended2: List[(Int, Int)] = null
-        var keepGoing = false
-        if (chainFound.size > 1) {
+        val chainFound = innerResult._2
+        val keepGoing = chainFound.size > 1 && extended.length < dominoes.length
+        if (keepGoing) {
           val (before, after) = extended.splitAt(i)
-          extended2 = before ++ chainFound.tail ++ after
-          keepGoing = extended.length < dominoes.length
-        } else {
-          keepGoing = false
-        }
-        if(keepGoing) {
-          outer(extended2)
+          extendChain(before ++ chainFound.tail ++ after, innerResult._3)
         } else {
           extended
         }
       }
-      val extended = outer(chain)
+      val extended = extendChain(chain, g)
       if(extended.length == dominoes.length && extended.head._1 == extended.last._2) {
         Some(extended)
       } else {
